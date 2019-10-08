@@ -10,7 +10,8 @@ import com.example.pokedexapp.data.PokemonListResult
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.pokelist_item.view.*
 
-class PokemonListAdapter(private val pokeList: PokemonListResult): RecyclerView.Adapter<PokemonListAdapter.ViewHolder>() {
+class PokemonListAdapter(private var pokeList: PokemonListResult): RecyclerView.Adapter<PokemonListAdapter.ViewHolder>() {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.pokelist_item, parent, false)
         return ViewHolder(view)
@@ -22,6 +23,12 @@ class PokemonListAdapter(private val pokeList: PokemonListResult): RecyclerView.
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bindPokemon(pokeList.results[position])
+    }
+
+    fun addPokemons(pokeResult: PokemonListResult) {
+        val itemsCount = pokeList.results.size
+        pokeList.results += pokeResult.results
+        notifyItemRangeInserted(itemsCount, pokeList.results.size)
     }
 
 

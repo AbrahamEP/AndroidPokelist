@@ -14,4 +14,4 @@ data class Pokemon(val name: String, val url: String) {
         }
 }
 
-data class PokemonListResult(val results: List<Pokemon>)
+data class PokemonListResult(var results: List<Pokemon>)

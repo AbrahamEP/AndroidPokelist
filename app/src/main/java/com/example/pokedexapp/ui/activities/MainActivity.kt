@@ -6,9 +6,11 @@ import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import com.example.pokedexapp.R
 import com.example.pokedexapp.api.PokemonAPI
+import com.example.pokedexapp.data.Pokemon
 import com.example.pokedexapp.data.PokemonListResult
 import com.example.pokedexapp.ui.adapters.PokemonListAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -19,14 +21,18 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity() {
 
     private val pokemonApi = PokemonAPI()
+    private lateinit var linearLayout: LinearLayoutManager
+    private lateinit var adapter: PokemonListAdapter
+    private lateinit var pokeList: List<Pokemon>
     private val getPokemonsCallback = object: Callback<PokemonListResult> {
         override fun onFailure(call: Call<PokemonListResult>, t: Throwable) {
             Log.e("MainActivity", "Problem calling Pokemon API", t)
         }
 
         override fun onResponse(call: Call<PokemonListResult>, response: Response<PokemonListResult>) {
-            val pokeList = PokemonListResult(response.body()?.results ?: emptyList())
-            pokelistRecycler.adapter = PokemonListAdapter(pokeList)
+            val results = response.body()?.results ?: emptyList()
+            val pokeListResult = PokemonListResult(results)
+            adapter.addPokemons(pokeListResult)
         }
     }
 
@@ -34,11 +40,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        pokeList = emptyList()
+        adapter = PokemonListAdapter(PokemonListResult(pokeList))
+        linearLayout = LinearLayoutManager(this)
+        pokelistRecycler.adapter = adapter
+
+        setRecyclerViewScrollListener()
         refreshButton.setOnClickListener {
             pokemonApi.getPokemons(getPokemonsCallback)
         }
 
-        pokelistRecycler.layoutManager = LinearLayoutManager(this)
+        pokelistRecycler.layoutManager = linearLayout
         if (isNetworkConnected()) {
             pokemonApi.getPokemons(getPokemonsCallback)
         }else{
@@ -47,6 +59,19 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton(android.R.string.ok) {_,_ ->}
                 .setIcon(android.R.drawable.ic_dialog_alert).show()
         }
+    }
+
+    private fun setRecyclerViewScrollListener() {
+        pokelistRecycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                val itemCount = pokelistRecycler.layoutManager!!.itemCount
+                if (itemCount == linearLayout.findLastVisibleItemPosition() + 1) {
+                    //Load more data
+                    pokemonApi.getPokemons(itemCount, 20, this@MainActivity.getPokemonsCallback)
+                }
+            }
+        })
     }
 
     private fun isNetworkConnected(): Boolean {

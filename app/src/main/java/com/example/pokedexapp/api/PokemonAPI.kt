@@ -9,7 +9,7 @@ class PokemonAPI {
     private val service: PokemonService
 
     companion object {
-        const val BASE_URL = "https://pokeapi.co/"
+        const val BASE_URL = "https://pokeapi.co/api/v2/"
     }
 
     init {
@@ -22,6 +22,11 @@ class PokemonAPI {
 
     fun getPokemons(callback: Callback<PokemonListResult>) {
         val call = service.getPokemons()
+        call.enqueue(callback)
+    }
+
+    fun getPokemons(offset: Int, limit: Int = 20, callback: Callback<PokemonListResult>) {
+        val call = service.getPokemons(offset, limit)
         call.enqueue(callback)
     }
 }
